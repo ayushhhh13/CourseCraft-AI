@@ -1,63 +1,42 @@
-import { useAuth0 } from '@auth0/auth0-react';
-import LoginButton from './LoginButton';
-import LogoutButton from './LogoutButton';
-import Profile from './Profile';
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useAuth0 } from "@auth0/auth0-react";
+import Profile from "./pages/Profile";
+import Home from "./pages/Home";
+import Dashboard from "./pages/Dashboard";
+// import LoginButton from "./components/LoginButton";
+import type { ReactNode, ReactElement } from "react";
 
-function App() {
-  const { isAuthenticated, isLoading, error } = useAuth0();
+function ProtectedRoute({ children }: { children: ReactNode }): ReactElement {
+  const { isAuthenticated, isLoading } = useAuth0();
 
-  if (isLoading) {
-    return (
-      <div className="app-container">
-        <div className="loading-state">
-          <div className="loading-text">Loading...</div>
-        </div>
-      </div>
-    );
-  }
+  if (isLoading) return <div>Loading...</div>;
 
-  if (error) {
-    return (
-      <div className="app-container">
-        <div className="error-state">
-          <div className="error-title">Oops!</div>
-          <div className="error-message">Something went wrong</div>
-          <div className="error-sub-message">{error.message}</div>
-        </div>
-      </div>
-    );
-  }
+  return isAuthenticated ? <>{children}</> : <Navigate to="/" />;
+}
 
+function App(): ReactElement {
   return (
-    <div className="app-container">
-      <div className="main-card-wrapper">
-        <img 
-          src="https://cdn.auth0.com/quantum-assets/dist/latest/logos/auth0/auth0-lockup-en-ondark.png" 
-          alt="Auth0 Logo" 
-          className="auth0-logo"
-          onError={(e) => {
-            e.currentTarget.style.display = 'none';
-          }}
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
         />
-        <h1 className="main-title">Welcome to Sample0</h1>
-        
-        {isAuthenticated ? (
-          <div className="logged-in-section">
-            <div className="logged-in-message">✅ Successfully authenticated!</div>
-            <h2 className="profile-section-title">Your Profile</h2>
-            <div className="profile-card">
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
               <Profile />
-            </div>
-            <LogoutButton />
-          </div>
-        ) : (
-          <div className="action-card">
-            <p className="action-text">Get started by signing in to your account</p>
-            <LoginButton />
-          </div>
-        )}
-      </div>
-    </div>
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
